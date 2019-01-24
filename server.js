@@ -1,22 +1,44 @@
 var http = require('http');
 var express = require('express');
 var app = express();
+const hbs                 = require('hbs');
+const path                = require('path');
+
+  
+
+// view engine
+app.set('view engine', 'hbs');
+app.set('view options', { layout: 'layout' });
+
+hbs.registerHelper('ifArray', function(item, options) {
+    if(Array.isArray(item)) {
+      return options.fn(this);
+    } else {
+      return options.inverse(this);
+    }
+  });
+
+hbs.registerHelper('select', function(selected, options) {
+    return options.fn(this).replace(
+      new RegExp(' value=\"' + selected + '\"'),
+      '$& selected="selected"');
+});
+
+// environment
+app.set('views', path.join(__dirname, 'views'));
 
 
 // Route for / - default page
 app.get('/', function (req, res) 
 {
-	res.setHeader('Content-Type', 'text/html');
-
-	formattedResponse = "<html><body><h1>What Just Happened?</h1><br>";
-	formattedResponse += "<img src=\"https://apiaccessmgmt.galvin.ninja/images/header-based-auth-diagram.png\"/>";
-	formattedResponse += "<br><h1>Headers Received Are Below</h1><br>";
-	formattedResponse += "<pre>";
-	formattedResponse += JSON.stringify(req.headers,null,4);
-	formattedResponse += "</pre>";
-	formattedResponse += "</body></html";
-
-	res.send(formattedResponse);
+  username = req.headers.http_remote_user;
+  headers = "<pre>";
+  headers += JSON.stringify(req.headers,null,4);
+  headers += "/<pre>";
+  return res.render('layout', {
+    username:  username,
+    headers: headers
+  });
 })
 
 httpPort = 8082;
